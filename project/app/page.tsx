@@ -52,7 +52,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-2">
             <Heart className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">HealthCare Manager</span>
+            <span className="text-2xl font-bold text-gray-900">HealthCheck Reminder</span>
           </div>
         </div>
       </header>
