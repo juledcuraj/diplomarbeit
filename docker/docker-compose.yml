@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17          # current stable major release
+    container_name: my_postgres   # name of the container itself
+    restart: unless-stopped        # restart policy (when does it restart)
+
+    environment:                     #container configuration variables (set password ...)
+      POSTGRES_DB: myappdb 
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mysecretpassword
+
+    # 1) Persistent data volume
+    # 2) One-off init script mount (read-only)
+    volumes:
+      - db_data:/var/lib/postgresql/data    #persistent data volume to save database content (tables, entries in tables)
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro         #init.sql file which is needed to create tables for the database
+
+    ports:
+      - "5432:5432"
+
+# Named volume lives outside the project directory
+volumes:
+  db_data:
+
+
+# start / stop the container
+# docker-compose up -d
+# docker-compose down
+
+# connect to the postgresql database
+# psql -h localhost -p 5432 -U myuser -d myappdb
