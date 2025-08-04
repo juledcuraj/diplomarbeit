@@ -49,6 +49,9 @@ export default function HealthMetricsPage() {
       const response = await fetch('/api/health-metrics', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (!response.ok) {
+        throw new Error('Failed to fetch health metrics');
+      }
       const data = await response.json();
       if (data.metrics) {
         setMetrics(data.metrics);
@@ -77,6 +80,10 @@ export default function HealthMetricsPage() {
           value_numeric: parseFloat(newMetric.value_numeric)
         })
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to add health metric');
+      }
 
       const data = await response.json();
       if (data.success) {
@@ -122,7 +129,7 @@ export default function HealthMetricsPage() {
   };
 
   // Group metrics by type for charts
-  const metricTypes = [...new Set(metrics.map(m => m.metric_type))];
+  const metricTypes = Array.from(new Set(metrics.map(m => m.metric_type)));
   
   const getChartData = (type: string) => {
     return metrics

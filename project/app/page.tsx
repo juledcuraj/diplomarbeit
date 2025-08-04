@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('demo@example.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -20,29 +20,31 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate a brief loading state
-    setTimeout(() => {
-      // Create demo user data
-      const demoUser = {
-        id: 1,
-        email: 'demo@example.com',
-        full_name: 'John Doe',
-        date_of_birth: '1990-05-15',
-        gender: 'Male',
-        phone: '+1-555-0123'
-      };
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Create a demo token
-      const demoToken = 'demo-token-' + Date.now();
+      const data = await response.json();
 
-      // Store in localStorage
-      localStorage.setItem('token', demoToken);
-      localStorage.setItem('user', JSON.stringify(demoUser));
-      
-      toast.success('Welcome back!');
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      // Store token and user data in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      toast.success(isLogin ? 'Welcome back!' : 'Account created successfully!');
       router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to authenticate');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -104,7 +106,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Side - Login Form */}
+          {/* Right Side - Login/Sign-Up Form */}
           <div className="flex justify-center">
             <Card className="w-full max-w-md shadow-xl">
               <CardHeader className="text-center">
@@ -138,7 +140,7 @@ export default function Home() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing In...' : (isLogin ? 'Sign In' : 'Create Account')}
+                    {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
                   </Button>
                 </form>
 
@@ -152,13 +154,6 @@ export default function Home() {
                     >
                       {isLogin ? 'Sign up' : 'Sign in'}
                     </button>
-                  </p>
-                </div>
-
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Demo Access:</strong><br />
-                    Click "Sign In\" with any credentials to access the demo
                   </p>
                 </div>
               </CardContent>
