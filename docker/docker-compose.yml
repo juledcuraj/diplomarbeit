@@ -9,7 +9,7 @@ services:
     environment:                     #container configuration variables (set password ...)
       POSTGRES_DB: myappdb 
       POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_PASSWORD: password123
 
     # 1) Persistent data volume
     # 2) One-off init script mount (read-only)
