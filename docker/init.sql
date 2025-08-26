@@ -2,15 +2,20 @@ BEGIN;
 
 -- ---------- Core tables ----------
 CREATE TABLE users (
-    id              BIGSERIAL PRIMARY KEY,
-    email           TEXT        NOT NULL UNIQUE,
-    password_hash   TEXT        NOT NULL,
-    full_name       TEXT        NOT NULL,
-    date_of_birth   DATE,
-    gender          TEXT,
-    phone           TEXT,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                       BIGSERIAL PRIMARY KEY,
+    email                    TEXT        NOT NULL UNIQUE,
+    password_hash            TEXT        NOT NULL,
+    full_name                TEXT        NOT NULL,
+    date_of_birth            DATE,
+    gender                   TEXT,
+    phone                    TEXT,
+    email_verified           BOOLEAN     NOT NULL DEFAULT FALSE,
+    verification_code        TEXT,
+    verification_expires_at  TIMESTAMPTZ,
+    verification_attempts    INTEGER     DEFAULT 0,
+    is_verified              BOOLEAN     NOT NULL DEFAULT FALSE,
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE appointments (

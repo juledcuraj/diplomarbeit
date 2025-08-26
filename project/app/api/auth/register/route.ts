@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { hashPassword, generateToken } from '@/lib/auth';
+import { hashPassword } from '@/lib/auth';
 import pool from '@/lib/db';
+import { sendVerificationEmail } from '@/lib/mailer';
+import { sha256 } from '@/lib/crypto';
 
 // Validation schema for registration
 const registerSchema = z.object({
@@ -66,21 +68,6 @@ export async function POST(request: NextRequest) {
 
     const { email, password, full_name, date_of_birth, gender, phone } = validationResult.data;
 
-    console.log('🔍 Testing database connection...');
-    
-    // Test database connection first
-    try {
-      const testQuery = 'SELECT 1 as test';
-      const testResult = await pool.query(testQuery);
-      console.log('✅ Database connection test successful:', testResult.rows[0]);
-    } catch (dbError) {
-      console.error('❌ Database connection test failed:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection failed', details: dbError instanceof Error ? dbError.message : 'Unknown error' },
-        { status: 500 }
-      );
-    }
-
     // Check if user already exists
     console.log('🔍 Checking if user exists...');
     const existingUserQuery = 'SELECT id FROM users WHERE email = $1';
@@ -98,12 +85,25 @@ export async function POST(request: NextRequest) {
     console.log('🔐 Hashing password...');
     const password_hash = hashPassword(password);
 
-    // Insert new user into database
-    console.log('💾 Inserting new user...');
+    // Generate 6-digit verification code
+    console.log('🔢 Generating verification code...');
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeHash = sha256(verificationCode);
+    const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Create user in database immediately, but mark as unverified
+    console.log('💾 Creating user in database with verification code...');
     const insertUserQuery = `
-      INSERT INTO users (email, password_hash, full_name, date_of_birth, gender, phone, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-      RETURNING id, email, full_name, date_of_birth, gender, phone, created_at
+      INSERT INTO users (
+        email, password_hash, full_name, date_of_birth, gender, phone, 
+        verification_code, verification_expires_at, is_verified, created_at, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false, NOW(), NOW())
+      ON CONFLICT (email) DO UPDATE SET
+        verification_code = EXCLUDED.verification_code,
+        verification_expires_at = EXCLUDED.verification_expires_at,
+        updated_at = NOW()
+      RETURNING id, email, full_name
     `;
     
     const values = [
@@ -112,39 +112,24 @@ export async function POST(request: NextRequest) {
       full_name,
       date_of_birth || null,
       gender || null,
-      phone || null
+      phone || null,
+      codeHash,
+      codeExpiresAt
     ];
 
     const result = await pool.query(insertUserQuery, values);
     const newUser = result.rows[0];
 
-    // Generate JWT token
-    console.log('🎫 Generating JWT token...');
-    const token = generateToken({
-      id: newUser.id,
-      email: newUser.email,
-      full_name: newUser.full_name,
-      date_of_birth: newUser.date_of_birth,
-      gender: newUser.gender,
-      phone: newUser.phone
-    });
+    // Send verification email
+    console.log('📧 Sending verification email...');
+    await sendVerificationEmail(email, verificationCode);
 
-    console.log('✅ User registered successfully!');
+    console.log('✅ User created and verification email sent!');
 
-    // Return success response with user data and token
+    // Return success response
     return NextResponse.json({
-      success: true,
-      message: 'User registered successfully',
-      token,
-      user: {
-        id: newUser.id,
-        email: newUser.email,
-        full_name: newUser.full_name,
-        date_of_birth: newUser.date_of_birth,
-        gender: newUser.gender,
-        phone: newUser.phone,
-        created_at: newUser.created_at
-      }
+      ok: true,
+      message: 'Registration successful! Please check your email for verification code.',
     }, { status: 201 });
 
   } catch (error) {

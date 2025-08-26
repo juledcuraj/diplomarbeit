@@ -9,10 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Heart, Shield, Calendar, Activity } from 'lucide-react';
 import { toast } from 'sonner';
+import VerifyEmailModal from '@/components/verify-email-modal';
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const router = useRouter();
 
   // Login form state
@@ -63,6 +66,15 @@ export default function Home() {
     }
   };
 
+  const handleVerificationSuccess = () => {
+    setShowVerifyModal(false);
+    toast.success("Account created and verified successfully! Check your email for confirmation.");
+    // Redirect to dashboard after successful verification
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 2000);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -93,10 +105,10 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        toast.success('Account created successfully!');
-        router.push('/dashboard');
+        // Show verification modal instead of direct login
+        setRegisteredEmail(registerData.email);
+        setShowVerifyModal(true);
+        toast.success('Registration initiated! Please check your email for verification code.');
       } else {
         toast.error(data.error || 'Registration failed');
       }
@@ -318,6 +330,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <VerifyEmailModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        email={registeredEmail}
+        onSuccess={handleVerificationSuccess}
+      />
     </div>
   );
 }

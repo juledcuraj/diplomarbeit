@@ -122,7 +122,7 @@ export default function HealthMetricsPage() {
   };
 
   // Group metrics by type for charts
-  const metricTypes = [...new Set(metrics.map(m => m.metric_type))];
+  const metricTypes = Array.from(new Set(metrics.map(m => m.metric_type)));
   
   const getChartData = (type: string) => {
     return metrics
