@@ -6,43 +6,106 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Heart, Shield, Calendar, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('demo@example.com');
-  const [password, setPassword] = useState('password');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleAuth = async (e: React.FormEvent) => {
+  // Login form state
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  });
+
+  // Registration form state
+  const [registerData, setRegisterData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    dateOfBirth: '',
+    gender: '',
+    phone: ''
+  });
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate a brief loading state
-    setTimeout(() => {
-      // Create demo user data
-      const demoUser = {
-        id: 1,
-        email: 'demo@example.com',
-        full_name: 'John Doe',
-        date_of_birth: '1990-05-15',
-        gender: 'Male',
-        phone: '+1-555-0123'
-      };
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
 
-      // Create a demo token
-      const demoToken = 'demo-token-' + Date.now();
+      const data = await response.json();
 
-      // Store in localStorage
-      localStorage.setItem('token', demoToken);
-      localStorage.setItem('user', JSON.stringify(demoUser));
-      
-      toast.success('Welcome back!');
-      router.push('/dashboard');
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        toast.success('Welcome back!');
+        router.push('/dashboard');
+      } else {
+        toast.error(data.error || 'Login failed');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+      console.error('Login error:', error);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Validate passwords match
+    if (registerData.password !== registerData.confirmPassword) {
+      toast.error('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: registerData.email,
+          password: registerData.password,
+          full_name: registerData.fullName,
+          date_of_birth: registerData.dateOfBirth,
+          gender: registerData.gender,
+          phone: registerData.phone
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        toast.success('Account created successfully!');
+        router.push('/dashboard');
+      } else {
+        toast.error(data.error || 'Registration failed');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+      console.error('Registration error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,33 +177,129 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleAuth} className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing In...' : (isLogin ? 'Sign In' : 'Create Account')}
-                  </Button>
-                </form>
+                {isLogin ? (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                        placeholder="Enter your password"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? 'Signing In...' : 'Sign In'}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <Input
+                          id="fullName"
+                          type="text"
+                          value={registerData.fullName}
+                          onChange={(e) => setRegisterData({...registerData, fullName: e.target.value})}
+                          placeholder="John Doe"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={registerData.phone}
+                          onChange={(e) => setRegisterData({...registerData, phone: e.target.value})}
+                          placeholder="+1-555-0123"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={registerData.email}
+                        onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={registerData.dateOfBirth}
+                          onChange={(e) => setRegisterData({...registerData, dateOfBirth: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select value={registerData.gender} onValueChange={(value) => setRegisterData({...registerData, gender: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={registerData.password}
+                        onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                        placeholder="Enter your password"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={registerData.confirmPassword}
+                        onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                        placeholder="Confirm your password"
+                        required
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? 'Creating Account...' : 'Create Account'}
+                    </Button>
+                  </form>
+                )}
 
                 <div className="mt-6 text-center">
                   <p className="text-sm text-gray-600">
@@ -152,13 +311,6 @@ export default function Home() {
                     >
                       {isLogin ? 'Sign up' : 'Sign in'}
                     </button>
-                  </p>
-                </div>
-
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Demo Access:</strong><br />
-                    Click "Sign In\" with any credentials to access the demo
                   </p>
                 </div>
               </CardContent>

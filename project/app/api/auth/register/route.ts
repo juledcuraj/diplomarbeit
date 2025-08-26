@@ -8,9 +8,17 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
   full_name: z.string().min(2, 'Full name must be at least 2 characters long'),
-  date_of_birth: z.string().optional(),
-  gender: z.string().optional(),
-  phone: z.string().optional(),
+  date_of_birth: z.string().optional().refine((date) => {
+    if (!date) return true; // Optional field
+    const parsed = new Date(date);
+    return !isNaN(parsed.getTime()) && parsed <= new Date();
+  }, 'Invalid date format or future date'),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
+  phone: z.string().optional().refine((phone) => {
+    if (!phone) return true; // Optional field
+    // Basic phone validation (allows various formats including numbers starting with 0)
+    return /^[\+]?[0-9][\d]{0,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
+  }, 'Invalid phone number format'),
 });
 
 export async function POST(request: NextRequest) {
