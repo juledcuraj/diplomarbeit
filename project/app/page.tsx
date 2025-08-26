@@ -226,7 +226,7 @@ export default function Home() {
                           type="tel"
                           value={registerData.phone}
                           onChange={(e) => setRegisterData({...registerData, phone: e.target.value})}
-                          placeholder="+1-555-0123"
+                          placeholder="+4312345678789"
                           required
                         />
                       </div>

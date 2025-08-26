@@ -7,7 +7,7 @@ export const users = [
     full_name: 'John Doe',
     date_of_birth: '1990-05-15',
     gender: 'Male',
-    phone: '+1-555-0123',
+    phone: '+4312345678789',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   }
@@ -145,7 +145,7 @@ export const emergencyProfile = {
   conditions: 'Mild Hypertension',
   medications: 'Lisinopril 10mg daily',
   emergency_contact_name: 'Jane Doe',
-  emergency_contact_phone: '+1-555-0124',
+  emergency_contact_phone: '+4312345678789',
   qr_code: 'EMERGENCY_PROFILE_1_JOHN_DOE',
   last_updated: '2024-12-01T00:00:00Z'
 };
