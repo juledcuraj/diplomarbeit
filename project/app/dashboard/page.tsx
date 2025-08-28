@@ -45,10 +45,20 @@ interface HealthSuggestion {
   read: boolean;
 }
 
+interface HealthMetric {
+  id: number;
+  metric_date: string;
+  metric_type: string;
+  value_numeric?: number;
+  value_text?: string;
+  unit?: string;
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [suggestions, setSuggestions] = useState<HealthSuggestion[]>([]);
+  const [metrics, setMetrics] = useState<HealthMetric[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -67,23 +77,30 @@ export default function Dashboard() {
 
   const fetchDashboardData = async (token: string) => {
     try {
-      const [appointmentsRes, suggestionsRes] = await Promise.all([
-        fetch('/api/appointments', {
+      const [appointmentsRes, suggestionsRes, metricsRes] = await Promise.all([
+        fetch('/api/getAppointments', {
           headers: { Authorization: `Bearer ${token}` }
         }),
         fetch('/api/health-suggestions', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch('/api/getMetrics?pageSize=5', {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
 
       const appointmentsData = await appointmentsRes.json();
       const suggestionsData = await suggestionsRes.json();
+      const metricsData = await metricsRes.json();
 
       if (appointmentsData.appointments) {
         setAppointments(appointmentsData.appointments);
       }
       if (suggestionsData.suggestions) {
         setSuggestions(suggestionsData.suggestions);
+      }
+      if (metricsData.metrics) {
+        setMetrics(metricsData.metrics);
       }
     } catch (error) {
       toast.error('Failed to load dashboard data');
@@ -104,6 +121,12 @@ export default function Dashboard() {
     .slice(0, 3);
 
   const unreadSuggestions = suggestions.filter(s => !s.read);
+  
+  const recentMetrics = metrics.slice(0, 3);
+  
+  const getLatestMetricByType = (type: string) => {
+    return metrics.find(m => m.metric_type === type);
+  };
 
   if (loading) {
     return (
@@ -186,10 +209,10 @@ export default function Dashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Health Score</p>
-                  <p className="text-3xl font-bold text-green-600">85</p>
+                  <p className="text-sm font-medium text-gray-600">Health Metrics</p>
+                  <p className="text-3xl font-bold text-green-600">{metrics.length}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
+                <Activity className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -278,7 +301,7 @@ export default function Dashboard() {
                 <CardDescription>Manage your health efficiently</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <Button 
                     variant="outline" 
                     className="h-20 flex-col gap-2"
@@ -297,11 +320,20 @@ export default function Dashboard() {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="h-20 flex-col gap-2"
-                    onClick={() => router.push('/records')}
+                    className="h-20 flex-col gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                    onClick={() => router.push('/medical-records')}
+                    title="Comprehensive medical records with PDF upload and health metrics integration"
                   >
-                    <FileText className="h-6 w-6" />
-                    <span className="text-sm">Medical Records</span>
+                    <FileText className="h-6 w-6 text-blue-600" />
+                    <span className="text-sm text-blue-600">Medical Records</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col gap-2"
+                    onClick={() => router.push('/medical-records')}
+                  >
+                    <TrendingUp className="h-6 w-6" />
+                    <span className="text-sm">Timeline</span>
                   </Button>
                   <Button 
                     variant="outline" 
@@ -309,7 +341,7 @@ export default function Dashboard() {
                     onClick={() => router.push('/emergency')}
                   >
                     <Shield className="h-6 w-6" />
-                    <span className="text-sm">Emergency Profile</span>
+                    <span className="text-sm">Emergency</span>
                   </Button>
                 </div>
               </CardContent>
@@ -353,32 +385,58 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Health Summary */}
+            {/* Recent Health Metrics */}
             <Card>
-              <CardHeader>
-                <CardTitle>Health Summary</CardTitle>
-                <CardDescription>Your overall health status</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <div>
+                  <CardTitle>Recent Health Metrics</CardTitle>
+                  <CardDescription>Your latest health measurements</CardDescription>
+                </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => router.push('/health-metrics')}
+                >
+                  View All
+                </Button>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Blood Pressure</span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">Normal</Badge>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Weight Trend</span>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">Stable</Badge>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Last Checkup</span>
-                  <span className="text-sm text-gray-900">Nov 15, 2024</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Next Due</span>
-                  <span className="text-sm text-gray-900">Dec 25, 2024</span>
-                </div>
+              <CardContent>
+                {recentMetrics.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentMetrics.map((metric) => (
+                      <div key={metric.id} className="flex justify-between items-center">
+                        <div>
+                          <span className="text-sm font-medium text-gray-900 capitalize">
+                            {metric.metric_type.replace('_', ' ')}
+                          </span>
+                          <p className="text-xs text-gray-500">
+                            {format(new Date(metric.metric_date), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-medium text-gray-900">
+                            {metric.value_text || 
+                             (metric.value_numeric && metric.unit ? 
+                              `${metric.value_numeric} ${metric.unit}` : 
+                              metric.value_numeric)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <Activity className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">No health metrics recorded</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => router.push('/health-metrics')}
+                    >
+                      Add Your First Metric
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
