@@ -243,7 +243,7 @@ export async function GET(
       if (existsSync(filePath)) {
         try {
           const uploadedPdfBytes = await readFile(filePath);
-          const uploadedPdf = await PDFDocument.load(uploadedPdfBytes);
+          const uploadedPdf = await PDFDocument.load(new Uint8Array(uploadedPdfBytes));
           
           // Copy pages from uploaded PDF to our summary PDF
           const uploadedPages = await pdfDoc.copyPages(uploadedPdf, uploadedPdf.getPageIndices());
@@ -267,7 +267,7 @@ export async function GET(
     // Log download for security
     console.log(`Complete medical record downloaded: ${filename} by user ${user.id} (${user.email})`);
 
-    return new NextResponse(finalPdfBytes, {
+    return new NextResponse(new Uint8Array(finalPdfBytes), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,

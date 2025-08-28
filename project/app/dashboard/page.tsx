@@ -16,7 +16,8 @@ import {
   Heart,
   LogOut,
   Plus,
-  TrendingUp
+  TrendingUp,
+  User
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -162,9 +163,19 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => router.push('/profile')}
+                  title="View Profile"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -330,10 +341,10 @@ export default function Dashboard() {
                   <Button 
                     variant="outline" 
                     className="h-20 flex-col gap-2"
-                    onClick={() => router.push('/medical-records')}
+                    onClick={() => router.push('/profile')}
                   >
-                    <TrendingUp className="h-6 w-6" />
-                    <span className="text-sm">Timeline</span>
+                    <User className="h-6 w-6" />
+                    <span className="text-sm">Profile</span>
                   </Button>
                   <Button 
                     variant="outline" 
