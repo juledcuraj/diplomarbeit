@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Plus, FileText, Filter, ChevronLeft, ChevronRight, Eye, Download, Activity, Calendar, Clock, Upload, X, File, FileArchive } from 'lucide-react';
+import { ArrowLeft, Plus, FileText, Filter, ChevronLeft, ChevronRight, Eye, Download, Activity, Calendar, Clock, Upload, X, File } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -42,14 +42,6 @@ interface RecordsResponse {
   total: number;
   totalPages: number;
   error?: string;
-}
-
-interface UploadResponse {
-  storage_uri: string;
-  filename: string;
-  size: number;
-  mime: string;
-  uploaded_at: string;
 }
 
 // Debounce hook
@@ -88,8 +80,6 @@ export default function MedicalRecordsPage() {
     include_metrics_summary: true
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   
@@ -194,41 +184,6 @@ export default function MedicalRecordsPage() {
     setDragOver(false);
   };
 
-  const uploadFile = async (file: File): Promise<UploadResponse> => {
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = (e.loaded / e.total) * 100;
-          setUploadProgress(progress);
-        }
-      });
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status === 201) {
-          const response = JSON.parse(xhr.responseText);
-          resolve(response);
-        } else {
-          const error = JSON.parse(xhr.responseText);
-          reject(new Error(error.error || 'Upload failed'));
-        }
-      });
-
-      xhr.addEventListener('error', () => {
-        reject(new Error('Upload failed'));
-      });
-
-      xhr.open('POST', '/api/records/upload');
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      xhr.send(formData);
-    });
-  };
-
   const handleCreateRecord = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
@@ -236,37 +191,25 @@ export default function MedicalRecordsPage() {
 
     setSubmitting(true);
     try {
-      let storage_uri = newRecord.storage_uri;
-
-      // Upload file if selected
+      // Use FormData to handle both form fields and file upload
+      const formData = new FormData();
+      formData.append('record_type', newRecord.record_type);
+      formData.append('record_date', newRecord.record_date);
+      formData.append('description', newRecord.description);
+      formData.append('include_metrics_summary', String(newRecord.include_metrics_summary));
+      
+      // Add file if selected
       if (selectedFile) {
-        setUploading(true);
-        setUploadProgress(0);
-        
-        try {
-          const uploadResult = await uploadFile(selectedFile);
-          storage_uri = uploadResult.storage_uri;
-          toast.success(`File uploaded: ${uploadResult.filename}`);
-        } catch (uploadError) {
-          toast.error(uploadError instanceof Error ? uploadError.message : 'Upload failed');
-          return;
-        } finally {
-          setUploading(false);
-          setUploadProgress(0);
-        }
+        formData.append('file', selectedFile);
       }
 
-      // Create record using medical-records endpoint for enhanced features
-      const response = await fetch('/api/medical-records', {
+      // Create combined record (form data + metrics + uploaded file in one PDF)
+      const response = await fetch('/api/records/create-combined', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...newRecord,
-          storage_uri
-        })
+        body: formData
       });
 
       const data = await response.json();
@@ -283,12 +226,12 @@ export default function MedicalRecordsPage() {
         
         // Invalidate SWR cache to refresh data
         mutate(buildSWRKey());
-        toast.success('Medical record added successfully!');
+        toast.success('Comprehensive medical record created successfully!');
       } else {
-        toast.error(data.error || 'Failed to add medical record');
+        toast.error(data.error || 'Failed to create medical record');
       }
     } catch (error) {
-      toast.error('Failed to add medical record');
+      toast.error('Failed to create medical record');
     } finally {
       setSubmitting(false);
     }
@@ -461,7 +404,7 @@ export default function MedicalRecordsPage() {
                   Add Medical Record
                 </CardTitle>
                 <CardDescription>
-                  Upload a PDF document or create a record with health metrics integration
+                  Create comprehensive medical records that combine your health data, metrics, and optional documents in one PDF
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -591,29 +534,17 @@ export default function MedicalRecordsPage() {
                     </Label>
                   </div>
 
-                  {/* Upload Progress */}
-                  {uploading && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Uploading...</span>
-                        <span>{Math.round(uploadProgress)}%</span>
-                      </div>
-                      <Progress value={uploadProgress} className="w-full" />
-                    </div>
-                  )}
-
                   <Button 
                     type="submit" 
                     className="w-full"
                     disabled={
                       submitting || 
-                      uploading || 
                       !newRecord.record_type || 
                       !newRecord.record_date || 
                       (!selectedFile && !newRecord.storage_uri)
                     }
                   >
-                    {submitting ? 'Adding...' : uploading ? 'Uploading...' : 'Add Record'}
+                    {submitting ? 'Creating Comprehensive Record...' : 'Add Record'}
                   </Button>
                 </form>
               </CardContent>
@@ -774,15 +705,6 @@ export default function MedicalRecordsPage() {
                                     title="Download Original File"
                                   >
                                     <Download className="h-4 w-4 text-green-600" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDownloadComplete(record.id, record.record_type)}
-                                    className="h-8 w-8 p-0 hover:bg-purple-100"
-                                    title="Download Complete Record (with summary)"
-                                  >
-                                    <FileArchive className="h-4 w-4 text-purple-600" />
                                   </Button>
                                 </div>
                               </div>

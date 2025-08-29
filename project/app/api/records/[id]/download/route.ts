@@ -3,6 +3,7 @@ import { getRecordById } from '@/lib/getRecords';
 import { getUserFromRequest } from '@/lib/auth';
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import pool from '@/lib/db';
 import path from 'path';
 
 // GET /api/records/[id]/download - Download file as attachment
@@ -26,6 +27,46 @@ export async function GET(
     if (!record) {
       return NextResponse.json({ error: 'Record not found or access denied' }, { status: 404 });
     }
+
+    // Check if PDF is stored in database (storage_uri starts with 'db_')
+    if (record.storage_uri && record.storage_uri.startsWith('db_')) {
+      try {
+        // Get PDF data from database
+        const result = await pool.query(
+          `SELECT pdf_data, filename, file_size, mime_type, record_type 
+           FROM medical_records 
+           WHERE id = $1 AND user_id = $2 AND pdf_data IS NOT NULL`,
+          [recordId, user.id]
+        );
+
+        if (result.rows.length === 0) {
+          return NextResponse.json({ error: 'PDF data not found in database' }, { status: 404 });
+        }
+
+        const dbRecord = result.rows[0];
+        const pdfData = dbRecord.pdf_data;
+        const filename = dbRecord.filename || `medical_record_${recordId}.pdf`;
+        const safeFileName = `${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}_${dbRecord.record_type}_${recordId}`;
+
+        // Log download for security
+        console.log(`Database PDF downloaded: ${filename} by user ${user.id} (${user.email}), record_id: ${recordId}`);
+
+        return new NextResponse(pdfData, {
+          headers: {
+            'Content-Type': dbRecord.mime_type || 'application/pdf',
+            'Content-Disposition': `attachment; filename="${safeFileName}"`,
+            'Content-Length': dbRecord.file_size?.toString() || pdfData.length.toString(),
+            'Cache-Control': 'private, no-cache',
+            'X-Content-Type-Options': 'nosniff',
+          },
+        });
+      } catch (dbError) {
+        console.error('Error retrieving PDF from database:', dbError);
+        return NextResponse.json({ error: 'Error retrieving PDF from database' }, { status: 500 });
+      }
+    }
+
+    // Fallback to file system storage for existing records
 
     // Sanitize and validate storage path
     const sanitizedPath = record.storage_uri.replace(/\.\./g, '').replace(/[<>:"|?*]/g, '');

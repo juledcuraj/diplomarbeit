@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
+import pool from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
 // POST /api/records/upload - Upload PDF file
@@ -47,24 +45,9 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-zA-Z0-9.-]/g, '_')
       .substring(0, 50);
     const filename = `${uniqueId}_${sanitizedName}`;
-    
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(process.cwd(), 'uploads');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Create user-specific subdirectory
-    const userUploadsDir = path.join(uploadsDir, `user_${user.id}`);
-    if (!existsSync(userUploadsDir)) {
-      await mkdir(userUploadsDir, { recursive: true });
-    }
-
-    const filePath = path.join(userUploadsDir, filename);
-    const storage_uri = `user_${user.id}/${filename}`;
 
     try {
-      // Convert file to buffer and save
+      // Convert file to buffer for database storage
       const bytes = await file.arrayBuffer();
       const buffer = new Uint8Array(bytes);
       
@@ -78,10 +61,34 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      await writeFile(filePath, buffer);
+      // Store PDF in database instead of file system
+      const storage_uri = `db_${uniqueId}`;
+      
+      // Insert into database with PDF binary data
+      const result = await pool.query(
+        `INSERT INTO medical_records (
+          user_id, record_type, record_date, description, 
+          pdf_data, filename, file_size, mime_type, 
+          storage_uri, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
+        RETURNING id, filename, file_size, created_at`,
+        [
+          user.id,
+          'uploaded_document', // default type
+          new Date().toISOString().split('T')[0], // today's date
+          `Uploaded PDF: ${file.name}`,
+          buffer, // Store binary data in database
+          file.name,
+          file.size,
+          file.type,
+          storage_uri
+        ]
+      );
+
+      const savedRecord = result.rows[0];
 
       // Log upload for security
-      console.log(`File uploaded: ${storage_uri} by user ${user.id} (${user.email}), size: ${file.size} bytes`);
+      console.log(`PDF stored in database: ${filename} by user ${user.id} (${user.email}), size: ${file.size} bytes, record_id: ${savedRecord.id}`);
 
       return NextResponse.json({
         storage_uri,
@@ -91,10 +98,10 @@ export async function POST(request: NextRequest) {
         uploaded_at: new Date().toISOString()
       }, { status: 201 });
 
-    } catch (fileError) {
-      console.error('Error saving file:', fileError);
+    } catch (dbError) {
+      console.error('Error saving PDF to database:', dbError);
       return NextResponse.json(
-        { error: 'Failed to save file' },
+        { error: 'Failed to save PDF to database' },
         { status: 500 }
       );
     }

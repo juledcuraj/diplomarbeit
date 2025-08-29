@@ -45,11 +45,20 @@ CREATE TABLE medical_records (
     id           BIGSERIAL PRIMARY KEY,
     user_id      BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     record_type  TEXT        NOT NULL,       -- e.g., lab_result, imaging
-    storage_uri  TEXT        NOT NULL,       -- file path, URL, or object-store key
+    storage_uri  TEXT,                       -- file path, URL, or object-store key (nullable for DB storage)
     record_date  DATE        NOT NULL,
     description  TEXT,
+    pdf_data     BYTEA,                      -- Store PDF binary data directly in database
+    filename     VARCHAR(255),               -- Original filename
+    file_size    BIGINT,                     -- File size in bytes
+    mime_type    VARCHAR(100),               -- MIME type (application/pdf)
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_storage_method CHECK (
+        (storage_uri IS NOT NULL AND pdf_data IS NULL) OR 
+        (storage_uri IS NULL AND pdf_data IS NOT NULL) OR
+        (storage_uri IS NOT NULL AND pdf_data IS NOT NULL)
+    )
 );
 
 CREATE TABLE health_metrics (

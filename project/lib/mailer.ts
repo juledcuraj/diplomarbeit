@@ -61,7 +61,7 @@ export async function sendWelcomeEmail(to: string, fullName: string): Promise<vo
           <li>Medical records management</li>
         </ul>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/dashboard" 
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" 
              style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Access Your Dashboard
           </a>
