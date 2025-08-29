@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -212,6 +213,14 @@ export default function Home() {
                         placeholder="Enter your password"
                         required
                       />
+                    </div>
+                    <div className="flex justify-end">
+                      <Link
+                        href="/forgot-password"
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Forgot your password?
+                      </Link>
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? 'Signing In...' : 'Sign In'}

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -30,6 +31,10 @@ export function generateToken(user: User): string {
     JWT_SECRET,
     { expiresIn: '7d' }
   );
+}
+
+export function generatePasswordResetToken(): string {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 export function verifyToken(token: string): any {

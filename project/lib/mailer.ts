@@ -81,3 +81,51 @@ export async function sendWelcomeEmail(to: string, fullName: string): Promise<vo
     console.warn("Welcome email failed but continuing with registration");
   }
 }
+
+export async function sendPasswordResetEmail(to: string, fullName: string, resetToken: string): Promise<void> {
+  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+  
+  const mailOptions = {
+    from: process.env.SMTP_USER,
+    to,
+    subject: "Reset Your Password - Health Management Platform",
+    text: `Hi ${fullName}, you requested a password reset. Click this link to reset your password: ${resetUrl}. This link will expire in 1 hour. If you didn't request this, please ignore this email.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #dc3545;">Password Reset Request</h2>
+        <p>Hi ${fullName},</p>
+        <p>We received a request to reset your password for your Health Management Platform account.</p>
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #856404; margin-top: 0;">🔑 Reset Your Password</h3>
+          <p style="margin-bottom: 15px;">Click the button below to create a new password:</p>
+          <div style="text-align: center;">
+            <a href="${resetUrl}" 
+               style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+        </div>
+        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #721c24;">
+            <strong>⚠️ Important:</strong> This link will expire in 1 hour for security reasons.
+          </p>
+        </div>
+        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace;">
+          ${resetUrl}
+        </p>
+        <p><strong>If you didn't request this password reset, please ignore this email.</strong> Your password will remain unchanged.</p>
+        <p>For security reasons, this request came from IP address and will be logged.</p>
+        <p>Best regards,<br>Health Management Platform Team</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to ${to}`);
+  } catch (error) {
+    console.error(`❌ Failed to send password reset email to ${to}:`, error);
+    throw new Error("Failed to send password reset email");
+  }
+}
