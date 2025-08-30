@@ -41,6 +41,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
     if (!token) {
       router.push('/');
       return;
@@ -66,6 +67,13 @@ export default function ProfilePage() {
           emergency_contact_name: data.profile.emergency_contact_name || '',
           emergency_contact_phone: data.profile.emergency_contact_phone || ''
         });
+      } else if (data.error === 'User not found') {
+        // Token contains invalid user ID, clear localStorage and redirect to login
+        toast.error('Session expired. Please log in again.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/');
+        return;
       } else {
         toast.error(data.error || 'Failed to load profile');
       }

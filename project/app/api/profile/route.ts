@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Get user data from the users table
     const result = await pool.query(
       'SELECT id, email, full_name, date_of_birth, gender, phone, created_at FROM users WHERE id = $1',
-      [user.id]
+      [parseInt(user.id.toString())]
     );
 
     if (result.rows.length === 0) {

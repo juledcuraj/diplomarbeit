@@ -118,25 +118,6 @@ export const medicalRecords = [
   }
 ];
 
-export const healthSuggestions = [
-  {
-    id: 1,
-    user_id: 1,
-    suggestion_text: 'Your blood pressure readings are excellent! Keep up with regular exercise and healthy diet.',
-    generated_at: '2024-12-01T00:00:00Z',
-    read: false,
-    related_metric_id: 1
-  },
-  {
-    id: 2,
-    user_id: 1,
-    suggestion_text: 'Consider scheduling your annual eye exam. It\'s been over a year since your last visit.',
-    generated_at: '2024-12-01T00:00:00Z',
-    read: false,
-    related_metric_id: null
-  }
-];
-
 export const emergencyProfile = {
   id: 1,
   user_id: 1,

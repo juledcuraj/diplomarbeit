@@ -8,7 +8,18 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Plus, ArrowLeft, Clock, FileText, Edit3, Check, X, CheckCircle, XCircle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Calendar, Plus, ArrowLeft, Clock, FileText, Edit3, Check, X, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -27,6 +38,7 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
     title: '',
     appointment_date: '',
@@ -94,7 +106,7 @@ export default function AppointmentsPage() {
           doctor_name: '',
           notes: ''
         });
-        toast.success('Appointment created successfully!');
+        toast.success('Appointment created successfully! Email reminders have been scheduled.');
       } else {
         toast.error(data.error || 'Failed to create appointment');
       }
@@ -200,6 +212,33 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleDeleteAppointment = async (appointmentId: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setDeletingId(appointmentId);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setAppointments(appointments.filter(apt => apt.id !== appointmentId));
+        toast.success('Appointment deleted successfully!');
+      } else {
+        toast.error(data.error || 'Failed to delete appointment');
+      }
+    } catch (error) {
+      toast.error('Failed to delete appointment');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // Sort appointments by date (upcoming first, then past)
   const sortedAppointments = [...appointments].sort((a, b) => {
     const dateA = new Date(a.appointment_date);
@@ -261,7 +300,7 @@ export default function AppointmentsPage() {
                   Add New Appointment
                 </CardTitle>
                 <CardDescription>
-                  Fill in the details for your new appointment
+                  Fill in the details for your new appointment. Email reminders will be automatically scheduled based on your appointment type.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -344,6 +383,14 @@ export default function AppointmentsPage() {
                   >
                     {submitting ? 'Creating...' : 'Create Appointment'}
                   </Button>
+                  
+                  <div className="text-xs text-gray-500 text-center mt-3 px-2">
+                    📧 Automatic email reminders will be sent based on your appointment type:
+                    <br />
+                    <span className="text-blue-600">Urgent appointments</span>: 1 week, 3 days, 1 day, 2 hours before
+                    <br />
+                    <span className="text-green-600">Regular/Specialist</span>: 1 week, 1 day, 2 hours before
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -520,6 +567,36 @@ export default function AppointmentsPage() {
                                   >
                                     <Edit3 className="h-4 w-4 text-blue-600" />
                                   </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 hover:bg-red-100"
+                                        title="Delete appointment"
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-600" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete "{appointment.title}"? This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDeleteAppointment(appointment.id)}
+                                          className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                          disabled={deletingId === appointment.id}
+                                        >
+                                          {deletingId === appointment.id ? 'Deleting...' : 'Delete'}
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </div>
                               </div>
 

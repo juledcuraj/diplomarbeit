@@ -12,12 +12,9 @@ const forgotPasswordSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     console.log('🔑 Forgot password API called');
-    console.log('DEBUG: Route handler started');
     
     // Parse and validate request body
-    console.log('DEBUG: About to parse request body');
     const body = await request.json();
-    console.log('DEBUG: Request body parsed:', body);
     const validationResult = forgotPasswordSchema.safeParse(body);
     
     if (!validationResult.success) {

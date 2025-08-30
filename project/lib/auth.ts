@@ -47,6 +47,7 @@ export function verifyToken(token: string): any {
 
 export function getUserFromRequest(request: Request): User | null {
   const authHeader = request.headers.get('authorization');
+  
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
   }
@@ -55,7 +56,7 @@ export function getUserFromRequest(request: Request): User | null {
   const decoded = verifyToken(token);
   
   return decoded ? {
-    id: decoded.id,
+    id: parseInt(decoded.id.toString()),
     email: decoded.email,
     full_name: decoded.full_name
   } : null;

@@ -10,6 +10,23 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+export async function sendEmail(to: string, subject: string, htmlContent: string): Promise<void> {
+  const mailOptions = {
+    from: process.env.SMTP_USER,
+    to,
+    subject,
+    html: htmlContent,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent to ${to}: ${subject}`);
+  } catch (error) {
+    console.error(`❌ Failed to send email to ${to}:`, error);
+    throw new Error("Failed to send email");
+  }
+}
+
 export async function sendVerificationEmail(to: string, code: string): Promise<void> {
   const mailOptions = {
     from: process.env.SMTP_USER,

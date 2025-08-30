@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import pool from '@/lib/db';
+import { updateRemindersForAppointment } from '@/lib/emailReminders';
 
 // PUT /api/appointments/[id] - Update appointment
 export async function PUT(
@@ -58,6 +59,14 @@ export async function PUT(
     
     const updatedAppointment = result.rows[0];
     
+    // Update email reminders for this appointment
+    try {
+      await updateRemindersForAppointment(appointmentId);
+    } catch (reminderError) {
+      console.error('Failed to update reminders for appointment:', reminderError);
+      // Don't fail the appointment update if reminders fail
+    }
+    
     return NextResponse.json({ 
       success: true, 
       appointment: updatedAppointment 
@@ -107,6 +116,19 @@ export async function DELETE(
       );
     }
     
+    // Delete related appointment_suggestions first (no CASCADE)
+    await pool.query(
+      'DELETE FROM appointment_suggestions WHERE appointment_id = $1',
+      [appointmentId]
+    );
+    
+    // Delete related reminders (has CASCADE but let's be explicit)
+    await pool.query(
+      'DELETE FROM reminders WHERE appointment_id = $1',
+      [appointmentId]
+    );
+    
+    // Now delete the appointment
     await pool.query(
       'DELETE FROM appointments WHERE id = $1 AND user_id = $2',
       [appointmentId, user.id]

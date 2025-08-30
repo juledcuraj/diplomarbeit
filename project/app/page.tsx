@@ -40,6 +40,10 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
 
+    // Clear any existing tokens to ensure fresh login
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',

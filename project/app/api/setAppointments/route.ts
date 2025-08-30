@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import pool from '@/lib/db';
+import { createRemindersForAppointment, sendRemindersForSpecificAppointment } from '@/lib/emailReminders';
 
 export async function POST(request: NextRequest) {
-  const user = getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
   
   if (!user) {
     return NextResponse.json(
@@ -31,6 +32,18 @@ export async function POST(request: NextRequest) {
     );
 
     const newAppointment = result.rows[0];
+    
+    // Create email reminders for this appointment
+    try {
+      await createRemindersForAppointment(newAppointment.id);
+      console.log(`Created reminders for new appointment ${newAppointment.id}`);
+      
+      // Send any reminders for THIS appointment that are due immediately (for testing)
+      await sendRemindersForSpecificAppointment(newAppointment.id);
+    } catch (reminderError) {
+      console.error('Failed to create reminders for appointment:', reminderError);
+      // Don't fail the appointment creation if reminders fail
+    }
     
     return NextResponse.json({ 
       success: true, 
