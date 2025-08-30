@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import pool from '@/lib/db';
+import { MEDICAL_CONFIG } from '@/lib/config';
 
 interface HealthMetric {
   id: number;
@@ -480,9 +481,9 @@ function analyzeOxygen(spo2Metrics: HealthMetric[] = [], oxygenMetrics: HealthMe
 
 function getTimeframeForDangerLevel(dangerLevel: 1 | 2 | 3): string {
   switch (dangerLevel) {
-    case 3: return 'within 7 days';
-    case 2: return 'within 2 weeks';
-    case 1: return 'within 4-6 weeks';
+    case 3: return MEDICAL_CONFIG.APPOINTMENT_TIMEFRAMES.HIGH_PRIORITY;
+    case 2: return MEDICAL_CONFIG.APPOINTMENT_TIMEFRAMES.MEDIUM_PRIORITY;
+    case 1: return MEDICAL_CONFIG.APPOINTMENT_TIMEFRAMES.LOW_PRIORITY;
   }
 }
 

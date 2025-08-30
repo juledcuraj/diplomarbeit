@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import VerifyEmailModal from "@/components/verify-email-modal";
+import { GENDER_OPTIONS } from "@/lib/constants/medical";
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(8, "Password must be at least 8 characters long"),
   fullName: z.string().min(2, "Full name must be at least 2 characters long"),
   dateOfBirth: z.string().optional(),
-  gender: z.enum(["Male", "Female", "Other", "Prefer not to say"]).optional(),
+  gender: z.enum(GENDER_OPTIONS).optional(),
   phone: z.string().optional(),
 });
 
@@ -184,10 +185,11 @@ export default function RegisterPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                        <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                        {GENDER_OPTIONS.map((gender) => (
+                          <SelectItem key={gender} value={gender}>
+                            {gender}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

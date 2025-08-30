@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowLeft, Plus, Activity, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { HEALTH_METRIC_TYPES, HEALTH_METRIC_LABELS } from '@/lib/constants/medical';
 
 interface HealthMetric {
   id: number;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { syncMedicalDataToEmergency } from '@/lib/syncMedicalData';
 import pool from '@/lib/db';
+import { VALIDATION_RULES } from '@/lib/config';
 
 // GET /api/profile - Get user profile
 export async function GET(request: NextRequest) {
@@ -99,8 +100,7 @@ export async function PUT(request: NextRequest) {
     } = await request.json();
 
     // Validate blood_type if provided
-    const validBloodTypes = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
-    if (blood_type && !validBloodTypes.includes(blood_type)) {
+    if (blood_type && !VALIDATION_RULES.BLOOD_TYPES.includes(blood_type as any)) {
       return NextResponse.json(
         { error: 'Invalid blood type' },
         { status: 400 }
@@ -108,7 +108,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Trim and limit text fields
-    const trimAndLimit = (text: string, maxLength: number = 1000) => {
+    const trimAndLimit = (text: string, maxLength: number = VALIDATION_RULES.MEDICAL_TEXT_MAX_LENGTH) => {
       return text ? text.trim().substring(0, maxLength) : null;
     };
 

@@ -11,6 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, User, Edit3, Save, X, Mail, Calendar, Phone, MapPin, Heart } from 'lucide-react';
 import { toast } from 'sonner';
+import { calculateAge, formatDate } from '@/lib/utils/dateFormatter';
+import { UI_CONFIG } from '@/lib/config';
+import { BLOOD_TYPES, GENDER_OPTIONS } from '@/lib/constants/medical';
 
 interface UserProfile {
   id: number;
@@ -163,18 +166,8 @@ export default function ProfilePage() {
     }
   };
 
-  const calculateAge = (birthDate: string) => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    
-    return age;
-  };
+  // Remove local calculateAge function since we're importing it
+  // const calculateAge = (birthDate: string) => { ... }
 
   if (loading) {
     return (
@@ -263,9 +256,7 @@ export default function ProfilePage() {
 
                   <div className="pt-4 border-t">
                     <p className="text-xs text-gray-500">
-                      Member since {new Date(profile.created_at).toLocaleDateString('en-US', { 
-                        year: 'numeric', month: 'long', day: 'numeric' 
-                      })}
+                      Member since {formatDate(profile.created_at, 'LONG')}
                     </p>
                   </div>
                 </CardContent>
@@ -342,10 +333,11 @@ export default function ProfilePage() {
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                              <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                              {GENDER_OPTIONS.map((option) => (
+                                <SelectItem key={option.toLowerCase().replace(/\s+/g, '_')} value={option.toLowerCase().replace(/\s+/g, '_')}>
+                                  {option}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -414,14 +406,11 @@ export default function ProfilePage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="">Not specified</SelectItem>
-                                  <SelectItem value="O-">O-</SelectItem>
-                                  <SelectItem value="O+">O+</SelectItem>
-                                  <SelectItem value="A-">A-</SelectItem>
-                                  <SelectItem value="A+">A+</SelectItem>
-                                  <SelectItem value="B-">B-</SelectItem>
-                                  <SelectItem value="B+">B+</SelectItem>
-                                  <SelectItem value="AB-">AB-</SelectItem>
-                                  <SelectItem value="AB+">AB+</SelectItem>
+                                  {BLOOD_TYPES.map((bloodType) => (
+                                    <SelectItem key={bloodType} value={bloodType}>
+                                      {bloodType}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -499,9 +488,7 @@ export default function ProfilePage() {
                           <Label className="text-sm font-medium text-gray-700">Date of Birth</Label>
                           <p className="mt-1 text-gray-900">
                             {profile.date_of_birth 
-                              ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { 
-                                  year: 'numeric', month: 'long', day: 'numeric' 
-                                })
+                              ? formatDate(profile.date_of_birth, 'LONG')
                               : 'Not provided'
                             }
                           </p>

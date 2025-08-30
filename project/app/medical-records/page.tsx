@@ -14,6 +14,9 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Plus, FileText, Filter, ChevronLeft, ChevronRight, Eye, Download, Activity, Calendar, Clock, Upload, X, File } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { MEDICAL_CONFIG } from '@/lib/config';
+import { MEDICAL_RECORD_TYPES, MEDICAL_RECORD_TYPE_LABELS } from '@/lib/constants/medical';
+import { getMedicalRecordThemeClasses } from '@/lib/utils/theme-utils';
 
 interface HealthMetric {
   metric_type: string;
@@ -313,16 +316,8 @@ export default function MedicalRecordsPage() {
   };
 
   const getRecordTypeColor = (type: string) => {
-    const colors: { [key: string]: string } = {
-      'lab_report': 'bg-blue-100 text-blue-800',
-      'prescription': 'bg-green-100 text-green-800',
-      'imaging': 'bg-purple-100 text-purple-800',
-      'consultation': 'bg-orange-100 text-orange-800',
-      'vaccination': 'bg-pink-100 text-pink-800',
-      'discharge_summary': 'bg-red-100 text-red-800',
-      'other': 'bg-gray-100 text-gray-800'
-    };
-    return colors[type] || colors['other'];
+    // Use new theme system instead of hardcoded colors
+    return getMedicalRecordThemeClasses(type);
   };
 
   const formatMetricValue = (metric: HealthMetric) => {
@@ -416,13 +411,11 @@ export default function MedicalRecordsPage() {
                         <SelectValue placeholder="Select record type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lab_report">Lab Report</SelectItem>
-                        <SelectItem value="prescription">Prescription</SelectItem>
-                        <SelectItem value="imaging">Imaging/X-Ray</SelectItem>
-                        <SelectItem value="consultation">Consultation</SelectItem>
-                        <SelectItem value="vaccination">Vaccination</SelectItem>
-                        <SelectItem value="discharge_summary">Discharge Summary</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {Object.entries(MEDICAL_RECORD_TYPES).map(([key, value]) => (
+                          <SelectItem key={value} value={value}>
+                            {MEDICAL_RECORD_TYPE_LABELS[value as keyof typeof MEDICAL_RECORD_TYPE_LABELS]}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -579,13 +572,11 @@ export default function MedicalRecordsPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Types</SelectItem>
-                          <SelectItem value="lab_report">Lab Report</SelectItem>
-                          <SelectItem value="prescription">Prescription</SelectItem>
-                          <SelectItem value="imaging">Imaging/X-Ray</SelectItem>
-                          <SelectItem value="consultation">Consultation</SelectItem>
-                          <SelectItem value="vaccination">Vaccination</SelectItem>
-                          <SelectItem value="discharge_summary">Discharge Summary</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          {Object.entries(MEDICAL_RECORD_TYPES).map(([key, value]) => (
+                            <SelectItem key={value} value={value}>
+                              {MEDICAL_RECORD_TYPE_LABELS[value as keyof typeof MEDICAL_RECORD_TYPE_LABELS]}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

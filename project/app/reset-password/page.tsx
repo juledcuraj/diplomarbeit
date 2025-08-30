@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
+import { UI_CONFIG } from '@/lib/config';
 
 function ResetPasswordForm() {
   const [token, setToken] = useState('');
@@ -80,7 +81,7 @@ function ResetPasswordForm() {
         // Redirect to login after 3 seconds
         setTimeout(() => {
           router.push('/');
-        }, 3000);
+        }, UI_CONFIG.TOAST_TIMEOUT);
       } else {
         setError(data.error || 'An error occurred');
       }

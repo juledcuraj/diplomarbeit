@@ -4,22 +4,23 @@ import { hashPassword } from '@/lib/auth';
 import pool from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/mailer';
 import { sha256 } from '@/lib/crypto';
+import { AUTH_CONFIG, VALIDATION_RULES } from '@/lib/config';
 
 // Validation schema for registration
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
-  full_name: z.string().min(2, 'Full name must be at least 2 characters long'),
+  password: z.string().min(AUTH_CONFIG.PASSWORD_MIN_LENGTH, `Password must be at least ${AUTH_CONFIG.PASSWORD_MIN_LENGTH} characters long`),
+  full_name: z.string().min(VALIDATION_RULES.FULL_NAME_MIN_LENGTH, `Full name must be at least ${VALIDATION_RULES.FULL_NAME_MIN_LENGTH} characters long`),
   date_of_birth: z.string().optional().refine((date) => {
     if (!date) return true; // Optional field
     const parsed = new Date(date);
     return !isNaN(parsed.getTime()) && parsed <= new Date();
   }, 'Invalid date format or future date'),
-  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
+  gender: z.enum(VALIDATION_RULES.GENDER_OPTIONS).optional(),
   phone: z.string().optional().refine((phone) => {
     if (!phone) return true; // Optional field
     // Basic phone validation (allows various formats including numbers starting with 0)
-    return /^[\+]?[0-9][\d]{0,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
+    return VALIDATION_RULES.PHONE_REGEX.test(phone.replace(/[\s\-\(\)]/g, ''));
   }, 'Invalid phone number format'),
 });
 
@@ -87,9 +88,9 @@ export async function POST(request: NextRequest) {
 
     // Generate 6-digit verification code
     console.log('🔢 Generating verification code...');
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCode = Math.floor(Math.pow(10, AUTH_CONFIG.VERIFICATION_CODE_LENGTH - 1) + Math.random() * (Math.pow(10, AUTH_CONFIG.VERIFICATION_CODE_LENGTH) - Math.pow(10, AUTH_CONFIG.VERIFICATION_CODE_LENGTH - 1))).toString();
     const codeHash = sha256(verificationCode);
-    const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    const codeExpiresAt = new Date(Date.now() + AUTH_CONFIG.VERIFICATION_CODE_EXPIRY_MINUTES * 60 * 1000);
 
     // Create user in database immediately, but mark as unverified
     console.log('💾 Creating user in database with verification code...');

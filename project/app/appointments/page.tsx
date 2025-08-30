@@ -22,6 +22,7 @@ import {
 import { Calendar, Plus, ArrowLeft, Clock, FileText, Edit3, Check, X, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { getAppointmentStatusThemeClasses } from '@/lib/utils/theme-utils';
 
 interface Appointment {
   id: number;
@@ -118,12 +119,8 @@ export default function AppointmentsPage() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    // Use new theme system instead of hardcoded colors
+    return getAppointmentStatusThemeClasses(status);
   };
 
   const handleEditAppointment = (appointment: Appointment) => {
