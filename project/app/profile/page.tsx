@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, User, Edit3, Save, X, Mail, Calendar, Phone, MapPin } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, User, Edit3, Save, X, Mail, Calendar, Phone, MapPin, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserProfile {
@@ -20,6 +22,13 @@ interface UserProfile {
   address?: string;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
+  // Medical fields
+  blood_type?: string;
+  allergies?: string;
+  chronic_conditions?: string;
+  implants?: string;
+  medication_notes?: string;
+  organ_donor?: boolean;
   created_at: string;
 }
 
@@ -35,7 +44,14 @@ export default function ProfilePage() {
     phone: '',
     address: '',
     emergency_contact_name: '',
-    emergency_contact_phone: ''
+    emergency_contact_phone: '',
+    // Medical fields
+    blood_type: '',
+    allergies: '',
+    chronic_conditions: '',
+    implants: '',
+    medication_notes: '',
+    organ_donor: false
   });
   const router = useRouter();
 
@@ -65,7 +81,14 @@ export default function ProfilePage() {
           phone: data.profile.phone || '',
           address: data.profile.address || '',
           emergency_contact_name: data.profile.emergency_contact_name || '',
-          emergency_contact_phone: data.profile.emergency_contact_phone || ''
+          emergency_contact_phone: data.profile.emergency_contact_phone || '',
+          // Medical fields
+          blood_type: data.profile.blood_type || '',
+          allergies: data.profile.allergies || '',
+          chronic_conditions: data.profile.chronic_conditions || '',
+          implants: data.profile.implants || '',
+          medication_notes: data.profile.medication_notes || '',
+          organ_donor: data.profile.organ_donor || false
         });
       } else if (data.error === 'User not found') {
         // Token contains invalid user ID, clear localStorage and redirect to login
@@ -97,7 +120,14 @@ export default function ProfilePage() {
         phone: profile.phone || '',
         address: profile.address || '',
         emergency_contact_name: profile.emergency_contact_name || '',
-        emergency_contact_phone: profile.emergency_contact_phone || ''
+        emergency_contact_phone: profile.emergency_contact_phone || '',
+        // Medical fields
+        blood_type: profile.blood_type || '',
+        allergies: profile.allergies || '',
+        chronic_conditions: profile.chronic_conditions || '',
+        implants: profile.implants || '',
+        medication_notes: profile.medication_notes || '',
+        organ_donor: profile.organ_donor || false
       });
     }
     setEditing(false);
@@ -367,6 +397,91 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Medical Information Section */}
+                      <div className="pt-6 border-t">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Heart className="h-5 w-5 text-red-500" />
+                          <h3 className="text-lg font-medium text-gray-900">Medical Information</h3>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="blood_type">Blood Type</Label>
+                              <Select value={editForm.blood_type} onValueChange={(value) => setEditForm({ ...editForm, blood_type: value })}>
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue placeholder="Select blood type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">Not specified</SelectItem>
+                                  <SelectItem value="O-">O-</SelectItem>
+                                  <SelectItem value="O+">O+</SelectItem>
+                                  <SelectItem value="A-">A-</SelectItem>
+                                  <SelectItem value="A+">A+</SelectItem>
+                                  <SelectItem value="B-">B-</SelectItem>
+                                  <SelectItem value="B+">B+</SelectItem>
+                                  <SelectItem value="AB-">AB-</SelectItem>
+                                  <SelectItem value="AB+">AB+</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex items-center space-x-2 pt-6">
+                              <Checkbox
+                                id="organ_donor"
+                                checked={editForm.organ_donor}
+                                onCheckedChange={(checked) => setEditForm({ ...editForm, organ_donor: checked === true })}
+                              />
+                              <Label htmlFor="organ_donor" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Organ Donor
+                              </Label>
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor="allergies">Allergies</Label>
+                            <Textarea
+                              id="allergies"
+                              value={editForm.allergies}
+                              onChange={(e) => setEditForm({ ...editForm, allergies: e.target.value })}
+                              placeholder="List any known allergies (e.g., peanuts, shellfish, medications)"
+                              className="mt-1"
+                              rows={3}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="chronic_conditions">Chronic Conditions</Label>
+                            <Textarea
+                              id="chronic_conditions"
+                              value={editForm.chronic_conditions}
+                              onChange={(e) => setEditForm({ ...editForm, chronic_conditions: e.target.value })}
+                              placeholder="List any chronic medical conditions (e.g., diabetes, hypertension)"
+                              className="mt-1"
+                              rows={3}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="implants">Implants & Medical Devices</Label>
+                            <Textarea
+                              id="implants"
+                              value={editForm.implants}
+                              onChange={(e) => setEditForm({ ...editForm, implants: e.target.value })}
+                              placeholder="List any implants or medical devices (e.g., pacemaker, hip replacement)"
+                              className="mt-1"
+                              rows={3}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="medication_notes">Current Medications</Label>
+                            <Textarea
+                              id="medication_notes"
+                              value={editForm.medication_notes}
+                              onChange={(e) => setEditForm({ ...editForm, medication_notes: e.target.value })}
+                              placeholder="List current medications and dosages"
+                              className="mt-1"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     // Display View
@@ -418,6 +533,42 @@ export default function ProfilePage() {
                           <div>
                             <Label className="text-sm font-medium text-gray-700">Contact Phone</Label>
                             <p className="mt-1 text-gray-900">{profile.emergency_contact_phone || 'Not provided'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Medical Information Section */}
+                      <div className="pt-6 border-t">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Heart className="h-5 w-5 text-red-500" />
+                          <h3 className="text-lg font-medium text-gray-900">Medical Information</h3>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700">Blood Type</Label>
+                              <p className="mt-1 text-gray-900">{profile.blood_type || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700">Organ Donor</Label>
+                              <p className="mt-1 text-gray-900">{profile.organ_donor ? 'Yes' : 'No'}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Allergies</Label>
+                            <p className="mt-1 text-gray-900 whitespace-pre-wrap">{profile.allergies || 'None listed'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Chronic Conditions</Label>
+                            <p className="mt-1 text-gray-900 whitespace-pre-wrap">{profile.chronic_conditions || 'None listed'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Implants & Medical Devices</Label>
+                            <p className="mt-1 text-gray-900 whitespace-pre-wrap">{profile.implants || 'None listed'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Current Medications</Label>
+                            <p className="mt-1 text-gray-900 whitespace-pre-wrap">{profile.medication_notes || 'None listed'}</p>
                           </div>
                         </div>
                       </div>

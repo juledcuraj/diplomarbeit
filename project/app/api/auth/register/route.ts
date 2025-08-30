@@ -120,6 +120,24 @@ export async function POST(request: NextRequest) {
     const result = await pool.query(insertUserQuery, values);
     const newUser = result.rows[0];
 
+    // Bootstrap medical profile for new user
+    try {
+      await pool.query(
+        'INSERT INTO user_medical_profile (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING',
+        [newUser.id]
+      );
+      
+      // Also create emergency profile with basic info
+      const qrCode = `EMERGENCY_QR_${newUser.id}_${Date.now()}`;
+      await pool.query(
+        'INSERT INTO emergency_profiles (user_id, qr_code) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING',
+        [newUser.id, qrCode]
+      );
+    } catch (error) {
+      console.error('Failed to create medical/emergency profile:', error);
+      // Don't fail registration if profile creation fails
+    }
+
     // Send verification email
     console.log('📧 Sending verification email...');
     await sendVerificationEmail(email, verificationCode);
