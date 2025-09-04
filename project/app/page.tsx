@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Heart, Shield, Calendar, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import VerifyEmailModal from '@/components/verify-email-modal';
-import { GENDER_OPTIONS } from '@/lib/constants/medical';
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
@@ -154,8 +153,8 @@ export default function Home() {
 
             <div className="grid gap-6">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-medical-primary-light rounded-lg flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-medical-primary" />
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Smart Appointment Management</h3>
@@ -164,8 +163,8 @@ export default function Home() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-health-good-light rounded-lg flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-health-good" />
+                <div className="flex-shrink-0 w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-teal-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Health Metrics Tracking</h3>
@@ -174,8 +173,8 @@ export default function Home() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-health-excellent-light rounded-lg flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-health-excellent" />
+                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Emergency QR Profile</h3>
@@ -288,11 +287,10 @@ export default function Home() {
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
                           <SelectContent>
-                            {GENDER_OPTIONS.map((gender) => (
-                              <SelectItem key={gender} value={gender}>
-                                {gender}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

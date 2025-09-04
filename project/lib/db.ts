@@ -2,24 +2,15 @@ import { Pool } from 'pg';
 
 console.log('Initializing PostgreSQL connection pool...');
 
-// Database configuration from environment variables
-const dbConfig = {
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  user: process.env.POSTGRES_USER || 'myuser',
-  password: process.env.POSTGRES_PASSWORD || 'password123',
-  database: process.env.POSTGRES_DB || 'myappdb',
-};
-
-// Build connection string
-const connectionString = `postgresql://${dbConfig.user}:${dbConfig.password}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`;
+// Use connection string approach that might bypass Windows networking issues
+const connectionString = 'postgresql://myuser:password123@localhost:5432/myappdb';
 
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: parseInt(process.env.DB_POOL_MAX || '20'),
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
-  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '5000'),
+  ssl: false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Test the connection on startup

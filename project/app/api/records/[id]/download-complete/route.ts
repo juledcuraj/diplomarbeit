@@ -6,15 +6,12 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import pool from '@/lib/db';
-import { DateFormatter } from '@/lib/utils/dateFormatter';
 
 // GET /api/records/[id]/download-complete - Download merged PDF with record information
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const dateFormatter = new DateFormatter();
-  
   try {
     const user = await getUserFromRequest(request);
     if (!user) {
@@ -102,9 +99,13 @@ export async function GET(
     // Record details
     const recordInfo = [
       { label: 'Record Type:', value: record.record_type.replace('_', ' ').toUpperCase() },
-      { label: 'Record Date:', value: dateFormatter.formatDate(record.record_date, 'LONG') },
+      { label: 'Record Date:', value: new Date(record.record_date).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+      }) },
       { label: 'Description:', value: record.description || 'No description provided' },
-      { label: 'Created:', value: dateFormatter.formatDateTime(record.created_at, 'MEDIUM') },
+      { label: 'Created:', value: new Date(record.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      }) },
     ];
     
     recordInfo.forEach((info, index) => {
@@ -198,7 +199,7 @@ export async function GET(
           color: textColor,
         });
         
-        page.drawText(dateFormatter.formatDate(metric.metric_date, 'SHORT'), {
+        page.drawText(new Date(metric.metric_date).toLocaleDateString(), {
           x: 350,
           y: yPosition - (index * 20),
           size: 9,
@@ -220,7 +221,9 @@ export async function GET(
         color: rgb(0.5, 0.5, 0.5),
       });
       
-      page.drawText(`Generated on: ${dateFormatter.formatDateTime(new Date(), 'MEDIUM')}`, {
+      page.drawText(`Generated on: ${new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      })}`, {
         x: width - 200,
         y: 50,
         size: 8,

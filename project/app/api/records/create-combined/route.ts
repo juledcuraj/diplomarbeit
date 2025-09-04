@@ -3,12 +3,9 @@ import { getUserFromRequest } from '@/lib/auth';
 import pool from '@/lib/db';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
-import { DateFormatter } from '@/lib/utils/dateFormatter';
 
 // POST /api/records/create-combined - Create medical record with form data and optional PDF
 export async function POST(request: NextRequest) {
-  const dateFormatter = new DateFormatter();
-  
   try {
     const user = await getUserFromRequest(request);
     if (!user) {
@@ -101,10 +98,14 @@ export async function POST(request: NextRequest) {
     // Record details
     const recordInfo = [
       { label: 'Record Type:', value: record_type.replace('_', ' ').toUpperCase() },
-      { label: 'Record Date:', value: dateFormatter.formatDate(record_date, 'LONG') },
+      { label: 'Record Date:', value: new Date(record_date).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+      }) },
       { label: 'Description:', value: description || 'No description provided' },
       { label: 'Patient:', value: user.full_name || user.email },
-      { label: 'Created:', value: dateFormatter.formatDateTime(new Date(), 'MEDIUM') },
+      { label: 'Created:', value: new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      }) },
     ];
     
     recordInfo.forEach((info, index) => {
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
           color: textColor,
         });
         
-        currentPage.drawText(dateFormatter.formatDate(metric.metric_date, 'SHORT'), {
+        currentPage.drawText(new Date(metric.metric_date).toLocaleDateString(), {
           x: 350,
           y: yPosition - (index * 20),
           size: 9,
@@ -287,7 +288,9 @@ export async function POST(request: NextRequest) {
       color: rgb(0.5, 0.5, 0.5),
     });
     
-    currentPage.drawText(`Generated on: ${dateFormatter.formatDateTime(new Date(), 'MEDIUM')}`, {
+    currentPage.drawText(`Generated on: ${new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    })}`, {
       x: width - 200,
       y: 50,
       size: 8,
