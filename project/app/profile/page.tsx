@@ -337,15 +337,15 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <Label htmlFor="gender">Gender</Label>
-                          <Select value={editForm.gender} onValueChange={(value) => setEditForm({ ...editForm, gender: value })}>
+                          <Select value={editForm.gender || undefined} onValueChange={(value) => setEditForm({ ...editForm, gender: value })}>
                             <SelectTrigger className="mt-1">
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                              <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                              <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -408,12 +408,11 @@ export default function ProfilePage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <Label htmlFor="blood_type">Blood Type</Label>
-                              <Select value={editForm.blood_type} onValueChange={(value) => setEditForm({ ...editForm, blood_type: value })}>
+                              <Select value={editForm.blood_type || undefined} onValueChange={(value) => setEditForm({ ...editForm, blood_type: value })}>
                                 <SelectTrigger className="mt-1">
                                   <SelectValue placeholder="Select blood type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Not specified</SelectItem>
                                   <SelectItem value="O-">O-</SelectItem>
                                   <SelectItem value="O+">O+</SelectItem>
                                   <SelectItem value="A-">A-</SelectItem>
