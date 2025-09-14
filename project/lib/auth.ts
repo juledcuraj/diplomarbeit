@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -32,6 +33,10 @@ export function generateToken(user: User): string {
   );
 }
 
+export function generatePasswordResetToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
 export function verifyToken(token: string): any {
   try {
     return jwt.verify(token, JWT_SECRET);
@@ -42,6 +47,7 @@ export function verifyToken(token: string): any {
 
 export function getUserFromRequest(request: Request): User | null {
   const authHeader = request.headers.get('authorization');
+  
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
   }
@@ -50,7 +56,7 @@ export function getUserFromRequest(request: Request): User | null {
   const decoded = verifyToken(token);
   
   return decoded ? {
-    id: decoded.id,
+    id: parseInt(decoded.id.toString()),
     email: decoded.email,
     full_name: decoded.full_name
   } : null;

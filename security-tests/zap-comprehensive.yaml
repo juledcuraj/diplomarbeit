@@ -1,0 +1,81 @@
+env:
+  contexts:
+  - excludePaths: []
+    name: "Medical App Security Assessment"
+    urls:
+    - http://host.docker.internal:3000
+    - http://host.docker.internal:3000/api
+  parameters:
+    failOnError: false
+    progressToStdout: true
+
+jobs:
+# 1. Configure passive scanning
+- parameters:
+    enableTags: true
+    maxAlertsPerRule: 50
+  type: passiveScan-config
+
+# 2. Spider discovery
+- parameters:
+    context: "Medical App Security Assessment"
+    maxDuration: 3
+    maxDepth: 10
+    url: http://host.docker.internal:3000
+  type: spider
+
+# 3. AJAX Spider for modern web apps
+- parameters:
+    context: "Medical App Security Assessment"
+    maxDuration: 2
+    maxCrawlDepth: 10
+    numberOfBrowsers: 1
+    url: http://host.docker.internal:3000
+  type: spiderAjax
+
+# 4. Wait for passive scanning
+- parameters:
+    maxDuration: 2
+  type: passiveScan-wait
+
+# 5. Active Security Scan
+- parameters:
+    context: "Medical App Security Assessment"
+    maxRuleDurationInMins: 5
+    maxScanDurationInMins: 15
+    addQueryParam: false
+    delayInMs: 0
+    handleAntiCSRFTokens: true
+    maxAlertsPerRule: 10
+    scanHeadersAllRequests: true
+    threadPerHost: 2
+  type: activeScan
+
+# 6. Generate JSON summary
+- parameters:
+    format: LONG
+    summaryFile: /zap/wrk/comprehensive-security-summary.json
+  type: outputSummary
+
+# 7. Generate HTML report
+- parameters:
+    reportDescription: 'Comprehensive security assessment including OWASP Top 10, authentication bypass, and medical data protection analysis'
+    reportDir: /zap/wrk/
+    reportFile: comprehensive-security-report.html
+    reportTitle: Medical Application Security Assessment
+    template: traditional-html-plus
+  type: report
+
+# 8. Generate SARIF report
+- parameters:
+    reportDir: /zap/wrk/
+    reportFile: security-findings.sarif
+    template: sarif-json
+  type: report
+
+# 9. Generate JSON report
+- parameters:
+    reportDir: /zap/wrk/
+    reportFile: detailed-findings.json
+    template: traditional-json-plus
+  type: report
