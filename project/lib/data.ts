@@ -1,3 +1,5 @@
+import pool from "./db";
+
 // Static data for demo purposes - will be replaced with actual database calls
 export const users = [
   {
